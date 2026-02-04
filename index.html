@@ -1,0 +1,1782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gibbons Family Midwest College Tour</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  :root {
+    --navy: #1a365d;
+    --gold: #d69e2e;
+    --cream: #faf5eb;
+    --rust: #c53030;
+    --sage: #48bb78;
+    --sky: #4299e1;
+    --charcoal: #2d3748;
+    --gray: #718096;
+    --light: #f7fafc;
+  }
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  html { scroll-behavior: smooth; }
+  
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--cream);
+    color: var(--charcoal);
+    line-height: 1.7;
+  }
+  
+  /* Hero Section */
+  .hero {
+    height: 100vh;
+    min-height: 600px;
+    background: linear-gradient(135deg, var(--navy) 0%, #2c5282 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=1920&q=80') center/cover;
+    opacity: 0.2;
+  }
+  
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    color: #fff;
+    padding: 40px 20px;
+  }
+  
+  .hero-badge {
+    display: inline-block;
+    background: var(--gold);
+    color: var(--navy);
+    padding: 8px 24px;
+    border-radius: 50px;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 24px;
+  }
+  
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(40px, 8vw, 72px);
+    font-weight: 700;
+    margin-bottom: 16px;
+    line-height: 1.1;
+  }
+  
+  .hero p {
+    font-size: 20px;
+    opacity: 0.9;
+    margin-bottom: 32px;
+  }
+  
+  .hero-dates {
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    padding: 16px 32px;
+    border-radius: 60px;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  
+  .hero-dates span {
+    font-size: 18px;
+    font-weight: 600;
+  }
+  
+  .scroll-indicator {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    animation: bounce 2s infinite;
+    cursor: pointer;
+  }
+  
+  @keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+    40% { transform: translateX(-50%) translateY(-20px); }
+    60% { transform: translateX(-50%) translateY(-10px); }
+  }
+  
+  .scroll-indicator svg {
+    width: 32px;
+    height: 32px;
+    fill: rgba(255,255,255,0.7);
+  }
+  
+  /* Route Overview */
+  .route-overview {
+    background: var(--navy);
+    color: #fff;
+    padding: 80px 20px;
+  }
+  
+  .route-overview .container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .route-overview h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  
+  .route-stops {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  
+  .route-stop {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    flex: 1;
+    min-width: 120px;
+  }
+  
+  .route-stop .icon {
+    width: 60px;
+    height: 60px;
+    background: var(--gold);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin-bottom: 12px;
+  }
+  
+  .route-stop .name {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+  
+  .route-stop .date {
+    font-size: 12px;
+    opacity: 0.7;
+  }
+  
+  .route-arrow {
+    color: var(--gold);
+    font-size: 24px;
+  }
+  
+  /* Map Section */
+  .map-section {
+    position: sticky;
+    top: 0;
+    height: 50vh;
+    z-index: 10;
+  }
+  
+  #map {
+    height: 100%;
+    width: 100%;
+  }
+  
+  .leaflet-popup-content-wrapper {
+    border-radius: 12px;
+    padding: 0;
+  }
+  
+  .leaflet-popup-content {
+    margin: 0;
+    min-width: 200px;
+  }
+  
+  .map-popup {
+    padding: 16px;
+  }
+  
+  .map-popup h4 {
+    font-size: 16px;
+    margin-bottom: 4px;
+    color: var(--charcoal);
+  }
+  
+  .map-popup p {
+    font-size: 13px;
+    color: var(--gray);
+  }
+  
+  /* Day Sections */
+  .day-section {
+    position: relative;
+  }
+  
+  .day-hero {
+    height: 70vh;
+    min-height: 500px;
+    background-attachment: fixed;
+    background-position: center;
+    background-size: cover;
+    display: flex;
+    align-items: flex-end;
+    position: relative;
+  }
+  
+  .day-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.7) 100%);
+  }
+  
+  .day-hero-content {
+    position: relative;
+    z-index: 2;
+    padding: 60px;
+    color: #fff;
+    width: 100%;
+  }
+  
+  .day-badge {
+    display: inline-block;
+    background: var(--gold);
+    color: var(--navy);
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+  
+  .day-hero h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(32px, 5vw, 56px);
+    margin-bottom: 8px;
+  }
+  
+  .day-hero p {
+    font-size: 18px;
+    opacity: 0.9;
+  }
+  
+  .day-content {
+    background: var(--cream);
+    padding: 60px 20px;
+  }
+  
+  .day-content .container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  
+  /* Timeline */
+  .timeline {
+    position: relative;
+    padding-left: 40px;
+  }
+  
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--gold), var(--sage));
+  }
+  
+  .timeline-item {
+    position: relative;
+    margin-bottom: 32px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  
+  .timeline-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+  
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -36px;
+    top: 4px;
+    width: 16px;
+    height: 16px;
+    background: var(--gold);
+    border-radius: 50%;
+    border: 3px solid var(--cream);
+  }
+  
+  .timeline-time {
+    display: inline-block;
+    background: var(--navy);
+    color: #fff;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  
+  .timeline-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--charcoal);
+  }
+  
+  .timeline-desc {
+    color: var(--gray);
+    font-size: 15px;
+  }
+  
+  .timeline-desc a {
+    color: var(--rust);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  
+  .timeline-desc a:hover {
+    text-decoration: underline;
+  }
+  
+  /* Info Cards */
+  .info-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    margin-top: 40px;
+  }
+  
+  .info-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  }
+  
+  .info-card h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--gray);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .info-card h4 span {
+    font-size: 18px;
+  }
+  
+  .info-card ul {
+    list-style: none;
+  }
+  
+  .info-card li {
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 14px;
+  }
+  
+  .info-card li:last-child {
+    border-bottom: none;
+  }
+  
+  .info-card li strong {
+    color: var(--charcoal);
+  }
+  
+  .info-card li a {
+    color: var(--rust);
+    text-decoration: none;
+  }
+  
+  .info-card li a:hover {
+    text-decoration: underline;
+  }
+  
+  /* Drive Time Banner */
+  .drive-banner {
+    background: linear-gradient(135deg, var(--navy) 0%, #2c5282 100%);
+    color: #fff;
+    padding: 24px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin: 40px 0;
+  }
+  
+  .drive-banner .icon {
+    font-size: 40px;
+  }
+  
+  .drive-banner .text h4 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  
+  .drive-banner .text p {
+    font-size: 14px;
+    opacity: 0.8;
+  }
+  
+  /* School Stats */
+  .school-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin: 24px 0;
+  }
+  
+  .stat-pill {
+    background: #fff;
+    padding: 8px 16px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--charcoal);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  
+  .stat-pill.highlight {
+    background: var(--gold);
+    color: var(--navy);
+  }
+  
+  /* Flight Cards */
+  .flights-section {
+    background: var(--light);
+    padding: 80px 20px;
+  }
+  
+  .flights-section .container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  
+  .flights-section h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    text-align: center;
+    margin-bottom: 48px;
+    color: var(--navy);
+  }
+  
+  .flight-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 32px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  }
+  
+  .flight-card h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--gray);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+  }
+  
+  .flight-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .flight-row:last-child {
+    border-bottom: none;
+  }
+  
+  .flight-row.recommended {
+    background: linear-gradient(90deg, rgba(214, 158, 46, 0.1) 0%, transparent 100%);
+    margin: 0 -16px;
+    padding: 16px;
+    border-radius: 12px;
+  }
+  
+  .flight-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  
+  .airline-logo {
+    width: 40px;
+    height: 40px;
+    background: var(--light);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--navy);
+  }
+  
+  .flight-times {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--charcoal);
+  }
+  
+  .flight-meta {
+    font-size: 13px;
+    color: var(--gray);
+  }
+  
+  .flight-price {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--navy);
+  }
+  
+  .flight-price small {
+    display: block;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--gray);
+  }
+  
+  .nonstop-badge {
+    display: inline-block;
+    background: var(--sage);
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  
+  .stop-badge {
+    display: inline-block;
+    background: #e2e8f0;
+    color: var(--charcoal);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  
+  .flight-totals {
+    background: var(--navy);
+    color: #fff;
+    padding: 24px;
+    border-radius: 16px;
+    margin-top: 32px;
+  }
+  
+  .flight-totals h4 {
+    font-size: 16px;
+    margin-bottom: 16px;
+  }
+  
+  .flight-totals ul {
+    list-style: none;
+  }
+  
+  .flight-totals li {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 15px;
+  }
+  
+  .flight-totals .total-price {
+    font-weight: 700;
+    color: var(--gold);
+  }
+  
+  /* Hotels Section */
+  .hotels-section {
+    background: var(--cream);
+    padding: 80px 20px;
+  }
+  
+  .hotels-section .container {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  
+  .hotels-section h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    text-align: center;
+    margin-bottom: 48px;
+    color: var(--navy);
+  }
+  
+  .hotel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+  }
+  
+  .hotel-card {
+    background: #fff;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  }
+  
+  .hotel-card-header {
+    background: var(--navy);
+    color: #fff;
+    padding: 20px 24px;
+  }
+  
+  .hotel-card-header h4 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  
+  .hotel-card-header p {
+    font-size: 13px;
+    opacity: 0.8;
+  }
+  
+  .hotel-card-body {
+    padding: 24px;
+  }
+  
+  .hotel-option {
+    padding: 16px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .hotel-option:last-child {
+    border-bottom: none;
+  }
+  
+  .hotel-option h5 {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--charcoal);
+  }
+  
+  .hotel-option h5 a {
+    color: inherit;
+    text-decoration: none;
+  }
+  
+  .hotel-option h5 a:hover {
+    color: var(--rust);
+  }
+  
+  .hotel-option .price {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--rust);
+    margin-bottom: 4px;
+  }
+  
+  .hotel-option .desc {
+    font-size: 12px;
+    color: var(--gray);
+  }
+  
+  .hotel-option.featured {
+    background: linear-gradient(90deg, rgba(214, 158, 46, 0.15) 0%, transparent 100%);
+    margin: 0 -24px;
+    padding: 16px 24px;
+  }
+  
+  .hotel-option.featured h5::before {
+    content: '⭐ ';
+  }
+  
+  /* CTA Section */
+  .cta-section {
+    background: linear-gradient(135deg, var(--rust) 0%, #9b2c2c 100%);
+    color: #fff;
+    padding: 80px 20px;
+    text-align: center;
+  }
+  
+  .cta-section h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    margin-bottom: 16px;
+  }
+  
+  .cta-section p {
+    font-size: 18px;
+    opacity: 0.9;
+    margin-bottom: 32px;
+  }
+  
+  .cta-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center;
+  }
+  
+  .cta-btn {
+    display: inline-block;
+    background: #fff;
+    color: var(--rust);
+    padding: 14px 28px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  .cta-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  }
+  
+  /* Footer */
+  footer {
+    background: var(--navy);
+    color: #fff;
+    padding: 40px 20px;
+    text-align: center;
+  }
+  
+  footer p {
+    opacity: 0.7;
+    font-size: 14px;
+  }
+  
+  /* Photo Gallery */
+  .photo-gallery {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin: 32px 0;
+  }
+  
+  .photo-gallery img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 12px;
+  }
+  
+  .photo-gallery img:first-child {
+    grid-column: span 2;
+    height: 300px;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .map-section {
+      position: relative;
+      height: 40vh;
+    }
+    
+    .day-hero {
+      background-attachment: scroll;
+      height: 50vh;
+    }
+    
+    .day-hero-content {
+      padding: 30px;
+    }
+    
+    .route-stops {
+      flex-direction: column;
+    }
+    
+    .route-arrow {
+      transform: rotate(90deg);
+    }
+    
+    .timeline {
+      padding-left: 30px;
+    }
+    
+    .flight-row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    
+    .photo-gallery {
+      grid-template-columns: 1fr;
+    }
+    
+    .photo-gallery img:first-child {
+      grid-column: span 1;
+      height: 200px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">College Tour 2026</div>
+    <h1>The Midwest<br>Adventure</h1>
+    <p>Miles, Melinda & Zoey explore the Big Ten heartland</p>
+    <div class="hero-dates">
+      <span>✈️</span>
+      <span>April 2–8, 2026</span>
+      <span>🎓</span>
+    </div>
+  </div>
+  <a href="#overview" class="scroll-indicator">
+    <svg viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+  </a>
+</section>
+
+<!-- Route Overview -->
+<section id="overview" class="route-overview">
+  <div class="container">
+    <h2>The Route</h2>
+    <div class="route-stops">
+      <div class="route-stop">
+        <div class="icon">✈️</div>
+        <div class="name">Los Angeles</div>
+        <div class="date">Thu Apr 2</div>
+      </div>
+      <div class="route-arrow">→</div>
+      <div class="route-stop">
+        <div class="icon">🏙️</div>
+        <div class="name">Indianapolis</div>
+        <div class="date">Thu Apr 2</div>
+      </div>
+      <div class="route-arrow">→</div>
+      <div class="route-stop">
+        <div class="icon">🔴</div>
+        <div class="name">Indiana U</div>
+        <div class="date">Fri Apr 3</div>
+      </div>
+      <div class="route-arrow">→</div>
+      <div class="route-stop">
+        <div class="icon">☘️</div>
+        <div class="name">Notre Dame</div>
+        <div class="date">Sat Apr 4</div>
+      </div>
+      <div class="route-arrow">→</div>
+      <div class="route-stop">
+        <div class="icon">💛</div>
+        <div class="name">Michigan</div>
+        <div class="date">Sun Apr 5</div>
+      </div>
+      <div class="route-arrow">→</div>
+      <div class="route-stop">
+        <div class="icon">🦡</div>
+        <div class="name">Wisconsin</div>
+        <div class="date">Tue Apr 7</div>
+      </div>
+      <div class="route-arrow">→</div>
+      <div class="route-stop">
+        <div class="icon">✈️</div>
+        <div class="name">Chicago</div>
+        <div class="date">Wed Apr 8</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Interactive Map -->
+<section class="map-section">
+  <div id="map"></div>
+</section>
+
+<!-- Day 1: Indianapolis -->
+<section class="day-section" data-location="indianapolis">
+  <div class="day-hero" style="background-image: url('https://images.unsplash.com/photo-1569974507005-6dc61f97fb5c?w=1920&q=80');">
+    <div class="day-hero-content">
+      <div class="day-badge">Day 1 • Thursday, April 2</div>
+      <h2>Indianapolis</h2>
+      <p>Touch down & dinner with JJ</p>
+    </div>
+  </div>
+  <div class="day-content">
+    <div class="container">
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-time">9:34 AM</div>
+          <div class="timeline-title">Depart LAX ✈️</div>
+          <div class="timeline-desc">American Airlines nonstop to Indianapolis<br>Flight time: 4 hours 3 minutes</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">4:37 PM</div>
+          <div class="timeline-title">Arrive Indianapolis</div>
+          <div class="timeline-desc">Pick up rental car at IND airport<br>Drive to downtown (~20 min)</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">6:30 PM</div>
+          <div class="timeline-title">Dinner with JJ 🍽️</div>
+          <div class="timeline-desc">
+            Reservations recommended at one of these top spots:
+          </div>
+        </div>
+      </div>
+      
+      <div class="info-cards">
+        <div class="info-card">
+          <h4><span>🍴</span> Restaurant Picks</h4>
+          <ul>
+            <li>
+              <strong><a href="https://www.stelpis.com/" target="_blank">St. Elmo Steak House</a></strong><br>
+              Indianapolis institution since 1902. Famous shrimp cocktail. $$$
+            </li>
+            <li>
+              <strong><a href="https://www.bluebeardindykitchen.com/" target="_blank">Bluebeard</a></strong><br>
+              Farm-to-table in a historic building. James Beard nominated. $$$
+            </li>
+            <li>
+              <strong><a href="https://www.milktoothindy.com/" target="_blank">Milktooth</a></strong><br>
+              Award-winning brunch spot (if arriving earlier). $$
+            </li>
+            <li>
+              <strong><a href="https://tinkerindy.com/" target="_blank">Tinker Street</a></strong><br>
+              Creative American, great cocktails, neighborhood vibe. $$
+            </li>
+          </ul>
+        </div>
+        <div class="info-card">
+          <h4><span>🏨</span> Where to Stay</h4>
+          <ul>
+            <li>
+              <strong><a href="https://www.ihg.com/intercontinental/hotels/us/en/indianapolis/indha/hoteldetail" target="_blank">InterContinental Indianapolis</a></strong><br>
+              $189/night • Luxury, downtown location
+            </li>
+            <li>
+              <strong><a href="https://www.marriott.com/hotels/travel/indcc-jw-marriott-indianapolis/" target="_blank">JW Marriott Indianapolis</a></strong><br>
+              $209/night • Connected to convention center
+            </li>
+            <li>
+              <strong><a href="https://www.hilton.com/en/hotels/indcugi-embassy-suites-indianapolis-downtown/" target="_blank">Embassy Suites Downtown</a></strong><br>
+              $179/night • Suites, free breakfast
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Day 2: Indiana University -->
+<section class="day-section" data-location="bloomington">
+  <div class="day-hero" style="background-image: url('https://images.unsplash.com/photo-1607237138185-eedd9c632b0b?w=1920&q=80');">
+    <div class="day-hero-content">
+      <div class="day-badge">Day 2 • Friday, April 3</div>
+      <h2>Indiana University</h2>
+      <p>The iconic Sample Gates & beautiful Bloomington campus</p>
+    </div>
+  </div>
+  <div class="day-content">
+    <div class="container">
+      <div class="drive-banner">
+        <div class="icon">🚗</div>
+        <div class="text">
+          <h4>Indianapolis → Bloomington</h4>
+          <p>51 miles • ~1 hour drive south on IN-37</p>
+        </div>
+      </div>
+      
+      <div class="school-stats">
+        <span class="stat-pill highlight">🏆 Top 100 National</span>
+        <span class="stat-pill">👥 47,000 students</span>
+        <span class="stat-pill">📍 Bloomington, IN</span>
+        <span class="stat-pill">🎭 #1 Music School</span>
+        <span class="stat-pill">💼 Kelley Business</span>
+      </div>
+      
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-time">8:00 AM</div>
+          <div class="timeline-title">Breakfast & Drive</div>
+          <div class="timeline-desc">Leave Indianapolis, grab coffee for the road</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">10:00 AM</div>
+          <div class="timeline-title">Campus Tour</div>
+          <div class="timeline-desc">
+            <a href="https://admissions.indiana.edu/visit/campus-visit.html" target="_blank">Book your visit →</a><br>
+            Start at the Sample Gates — IU's iconic limestone entrance. Tours include the stunning Memorial Union, Lilly Library, and beautiful Old Crescent area.
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">12:30 PM</div>
+          <div class="timeline-title">Lunch on Kirkwood</div>
+          <div class="timeline-desc">Walk the charming main street of Bloomington</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">2:00 PM</div>
+          <div class="timeline-title">Explore Campus</div>
+          <div class="timeline-desc">Check out the Kelley School of Business, Jacobs School of Music, or the gorgeous arboretum</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">4:00 PM</div>
+          <div class="timeline-title">Drive to South Bend</div>
+          <div class="timeline-desc">~3 hour drive north to Notre Dame country</div>
+        </div>
+      </div>
+      
+      <div class="info-cards">
+        <div class="info-card">
+          <h4><span>🍴</span> Bloomington Eats</h4>
+          <ul>
+            <li>
+              <strong><a href="https://www.farmbloomington.com/" target="_blank">Farm Bloomington</a></strong><br>
+              Local ingredients, beautiful space. $$
+            </li>
+            <li>
+              <strong><a href="https://www.buffalouies.com/" target="_blank">BuffaLouie's</a></strong><br>
+              Legendary wings & campus vibes. $
+            </li>
+            <li>
+              <strong><a href="https://www.thenorthernmeal.com/" target="_blank">The Owlery</a></strong><br>
+              Vegetarian-friendly, local favorite. $$
+            </li>
+          </ul>
+        </div>
+        <div class="info-card">
+          <h4><span>👀</span> Don't Miss</h4>
+          <ul>
+            <li><strong>Sample Gates</strong> — THE photo op</li>
+            <li><strong>Showalter Fountain</strong> — Beautiful campus landmark</li>
+            <li><strong>Memorial Union</strong> — Historic student center</li>
+            <li><strong>Assembly Hall</strong> — Legendary basketball arena</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="drive-banner" style="background: linear-gradient(135deg, #0c2340 0%, #ae9142 100%);">
+        <div class="icon">🚗</div>
+        <div class="text">
+          <h4>Bloomington → South Bend</h4>
+          <p>195 miles • ~3 hours north via US-31</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Day 3: Notre Dame -->
+<section class="day-section" data-location="notredame">
+  <div class="day-hero" style="background-image: url('https://images.unsplash.com/photo-1564981797816-1043664bf78d?w=1920&q=80');">
+    <div class="day-hero-content">
+      <div class="day-badge">Day 3 • Saturday, April 4</div>
+      <h2>University of Notre Dame</h2>
+      <p>Touchdown Jesus & the Golden Dome</p>
+    </div>
+  </div>
+  <div class="day-content">
+    <div class="container">
+      <div class="school-stats">
+        <span class="stat-pill highlight">🏆 Top 20 National</span>
+        <span class="stat-pill">👥 12,600 students</span>
+        <span class="stat-pill">📍 South Bend, IN</span>
+        <span class="stat-pill">🏈 Fighting Irish</span>
+        <span class="stat-pill">💼 Mendoza Business</span>
+      </div>
+      
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-time">9:00 AM</div>
+          <div class="timeline-title">Breakfast</div>
+          <div class="timeline-desc">Grab a bite in South Bend before campus</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">10:00 AM</div>
+          <div class="timeline-title">Campus Tour</div>
+          <div class="timeline-desc">
+            <a href="https://admissions.nd.edu/visit/" target="_blank">Book your visit →</a><br>
+            Start at the Main Building with its famous Golden Dome. Don't miss the Basilica of the Sacred Heart, Hesburgh Library (Touchdown Jesus!), and Notre Dame Stadium.
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">12:30 PM</div>
+          <div class="timeline-title">Lunch</div>
+          <div class="timeline-desc">Try the campus dining hall or venture to Eddy Street Commons</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">2:00 PM</div>
+          <div class="timeline-title">The Grotto & Stadium</div>
+          <div class="timeline-desc">Visit the iconic Grotto of Our Lady of Lourdes and take photos at Notre Dame Stadium</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">4:00 PM</div>
+          <div class="timeline-title">Drive to Ann Arbor</div>
+          <div class="timeline-desc">~2.5 hour drive to Michigan territory</div>
+        </div>
+      </div>
+      
+      <div class="info-cards">
+        <div class="info-card">
+          <h4><span>🍴</span> South Bend Eats</h4>
+          <ul>
+            <li>
+              <strong><a href="https://www.barnabysamerica.com/" target="_blank">Barnaby's</a></strong><br>
+              Chicago-style pizza, local institution. $$
+            </li>
+            <li>
+              <strong><a href="https://roccorestaurant.com/" target="_blank">Rocco's</a></strong><br>
+              Upscale Italian, great for dinner. $$$
+            </li>
+            <li>
+              <strong><a href="https://www.eddystreetcommons.com/" target="_blank">Eddy Street Commons</a></strong><br>
+              Multiple options right by campus. $$
+            </li>
+          </ul>
+        </div>
+        <div class="info-card">
+          <h4><span>👀</span> Don't Miss</h4>
+          <ul>
+            <li><strong>Golden Dome</strong> — Iconic Main Building</li>
+            <li><strong>Touchdown Jesus</strong> — Hesburgh Library mural</li>
+            <li><strong>The Grotto</strong> — Peaceful, iconic spot</li>
+            <li><strong>Notre Dame Stadium</strong> — "The House That Rockne Built"</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="drive-banner" style="background: linear-gradient(135deg, #00274C 0%, #FFCB05 100%);">
+        <div class="icon">🚗</div>
+        <div class="text">
+          <h4>South Bend → Ann Arbor</h4>
+          <p>130 miles • ~2.5 hours via I-94</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Day 4: Michigan -->
+<section class="day-section" data-location="michigan">
+  <div class="day-hero" style="background-image: url('https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1920&q=80');">
+    <div class="day-hero-content">
+      <div class="day-badge">Day 4 • Sunday, April 5</div>
+      <h2>University of Michigan</h2>
+      <p>The Big House & America's best college town</p>
+    </div>
+  </div>
+  <div class="day-content">
+    <div class="container">
+      <div class="school-stats">
+        <span class="stat-pill highlight">🏆 Top 25 National</span>
+        <span class="stat-pill">👥 47,000 students</span>
+        <span class="stat-pill">📍 Ann Arbor, MI</span>
+        <span class="stat-pill">🏈 Go Blue!</span>
+        <span class="stat-pill">💼 Ross Business</span>
+        <span class="stat-pill">🔬 #1 Public Research</span>
+      </div>
+      
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-time">9:00 AM</div>
+          <div class="timeline-title">Breakfast on State Street</div>
+          <div class="timeline-desc">Walk the vibrant downtown, grab coffee</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">10:00 AM</div>
+          <div class="timeline-title">Campus Tour</div>
+          <div class="timeline-desc">
+            <a href="https://admissions.umich.edu/visit" target="_blank">Book your visit →</a><br>
+            Explore Central Campus, the Diag, Law Quad, and Michigan Union. Tours showcase why Ann Arbor is consistently rated one of America's best college towns.
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">12:30 PM</div>
+          <div class="timeline-title">Lunch Downtown</div>
+          <div class="timeline-desc">So many great options on State Street and Main Street</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">2:00 PM</div>
+          <div class="timeline-title">The Big House</div>
+          <div class="timeline-desc">Visit Michigan Stadium — the largest stadium in the Western Hemisphere (107,601 capacity!)</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">Evening</div>
+          <div class="timeline-title">Explore Ann Arbor</div>
+          <div class="timeline-desc">Great shops, restaurants, and college town vibes</div>
+        </div>
+      </div>
+      
+      <div class="info-cards">
+        <div class="info-card">
+          <h4><span>🍴</span> Ann Arbor Eats</h4>
+          <ul>
+            <li>
+              <strong><a href="https://www.zingermansdeli.com/" target="_blank">Zingerman's Deli</a></strong><br>
+              World-famous sandwiches, a must-visit. $$
+            </li>
+            <li>
+              <strong><a href="https://www.thehopcat.com/ann-arbor" target="_blank">HopCat</a></strong><br>
+              Great beer selection, crack fries. $$
+            </li>
+            <li>
+              <strong><a href="https://www.thegandy-dancer.com/" target="_blank">Gandy Dancer</a></strong><br>
+              Seafood in a historic train station. $$$
+            </li>
+            <li>
+              <strong><a href="https://frita-batidos.com/" target="_blank">Frita Batidos</a></strong><br>
+              Cuban street food, cult following. $$
+            </li>
+          </ul>
+        </div>
+        <div class="info-card">
+          <h4><span>👀</span> Don't Miss</h4>
+          <ul>
+            <li><strong>The Diag</strong> — Heart of campus</li>
+            <li><strong>Law Quad</strong> — Stunning Gothic architecture</li>
+            <li><strong>Michigan Stadium</strong> — The Big House!</li>
+            <li><strong>Main Street</strong> — Shops, restaurants, vibes</li>
+            <li><strong>Nichols Arboretum</strong> — Beautiful nature walks</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Day 5: Travel to Madison -->
+<section class="day-section" data-location="travel">
+  <div class="day-hero" style="background-image: url('https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=1920&q=80');">
+    <div class="day-hero-content">
+      <div class="day-badge">Day 5 • Monday, April 6</div>
+      <h2>Road Trip Day</h2>
+      <p>Ann Arbor → Madison through Michigan & Wisconsin</p>
+    </div>
+  </div>
+  <div class="day-content">
+    <div class="container">
+      <div class="drive-banner">
+        <div class="icon">🚗</div>
+        <div class="text">
+          <h4>Ann Arbor → Madison</h4>
+          <p>360 miles • ~5.5 hours via I-94 through Chicago area</p>
+        </div>
+      </div>
+      
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-time">9:00 AM</div>
+          <div class="timeline-title">Last Ann Arbor Coffee</div>
+          <div class="timeline-desc">Grab breakfast and hit the road</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">12:00 PM</div>
+          <div class="timeline-title">Chicago Lunch Stop (Optional)</div>
+          <div class="timeline-desc">Stop in Chicago for deep dish pizza or just power through</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">3:00 PM</div>
+          <div class="timeline-title">Arrive Madison</div>
+          <div class="timeline-desc">Check into hotel, relax, explore State Street</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">6:00 PM</div>
+          <div class="timeline-title">Dinner on State Street</div>
+          <div class="timeline-desc">Madison's vibrant main drag has endless options</div>
+        </div>
+      </div>
+      
+      <div class="info-cards">
+        <div class="info-card">
+          <h4><span>🏨</span> Madison Hotels</h4>
+          <ul>
+            <li>
+              <strong><a href="https://www.graduatehotels.com/madison/" target="_blank">Graduate Madison</a></strong><br>
+              $219/night • Right on State Street, college vibes
+            </li>
+            <li>
+              <strong><a href="https://www.hilton.com/en/hotels/msndtdt-the-edgewater/" target="_blank">The Edgewater</a></strong><br>
+              $289/night • Lakefront luxury
+            </li>
+            <li>
+              <strong><a href="https://www.hyatt.com/en-US/hotel/wisconsin/hyatt-place-madison-downtown/msnzd" target="_blank">Hyatt Place Downtown</a></strong><br>
+              $179/night • Great value, central location
+            </li>
+          </ul>
+        </div>
+        <div class="info-card">
+          <h4><span>🧀</span> Chicago Pit Stop Ideas</h4>
+          <ul>
+            <li><strong>Lou Malnati's</strong> — Deep dish legend</li>
+            <li><strong>Portillo's</strong> — Chicago hot dogs</li>
+            <li><strong>Garrett Popcorn</strong> — Chicago Mix to go</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Day 6: Wisconsin -->
+<section class="day-section" data-location="madison">
+  <div class="day-hero" style="background-image: url('https://images.unsplash.com/photo-1498637841888-108c6b723fcb?w=1920&q=80');">
+    <div class="day-hero-content">
+      <div class="day-badge">Day 6 • Tuesday, April 7</div>
+      <h2>University of Wisconsin</h2>
+      <p>On, Wisconsin! Lakeside campus beauty</p>
+    </div>
+  </div>
+  <div class="day-content">
+    <div class="container">
+      <div class="school-stats">
+        <span class="stat-pill highlight">🏆 Top 15 Public</span>
+        <span class="stat-pill">👥 50,000 students</span>
+        <span class="stat-pill">📍 Madison, WI</span>
+        <span class="stat-pill">🦡 Go Badgers!</span>
+        <span class="stat-pill">🔬 Top Research</span>
+        <span class="stat-pill">🌊 2 Lakes!</span>
+      </div>
+      
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-time">9:00 AM</div>
+          <div class="timeline-title">Breakfast on State Street</div>
+          <div class="timeline-desc">Fuel up before the tour</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">10:00 AM</div>
+          <div class="timeline-title">Campus Tour</div>
+          <div class="timeline-desc">
+            <a href="https://www.wisc.edu/visit/" target="_blank">Book your visit →</a><br>
+            One of the most beautiful campuses in America. Nestled between Lake Mendota and Lake Monona, the 936-acre campus features Bascom Hill, Memorial Union Terrace, and world-class facilities.
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">12:30 PM</div>
+          <div class="timeline-title">Memorial Union Terrace</div>
+          <div class="timeline-desc">Grab lunch and enjoy the iconic lakeside terrace — possibly the best view in college sports</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">2:00 PM</div>
+          <div class="timeline-title">Camp Randall</div>
+          <div class="timeline-desc">Visit the historic stadium, home of "Jump Around"</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">4:00 PM</div>
+          <div class="timeline-title">Wisconsin Capitol & Downtown</div>
+          <div class="timeline-desc">Walk to the beautiful State Capitol, explore the Saturday farmers market (if timing works)</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">Evening</div>
+          <div class="timeline-title">Final Night Dinner</div>
+          <div class="timeline-desc">Celebrate the trip at one of Madison's great restaurants</div>
+        </div>
+      </div>
+      
+      <div class="info-cards">
+        <div class="info-card">
+          <h4><span>🍴</span> Madison Eats</h4>
+          <ul>
+            <li>
+              <strong><a href="https://www.theoldfahioned.com/" target="_blank">The Old Fashioned</a></strong><br>
+              Wisconsin comfort food, cheese curds! $$
+            </li>
+            <li>
+              <strong><a href="https://merchantmadison.com/" target="_blank">Merchant</a></strong><br>
+              Great cocktails and upscale American. $$$
+            </li>
+            <li>
+              <strong><a href="https://www.iantascucina.com/" target="_blank">Osteria Papavero</a></strong><br>
+              Fantastic Italian, cozy atmosphere. $$$
+            </li>
+            <li>
+              <strong><a href="https://www.statestpub.com/" target="_blank">State Street Brats</a></strong><br>
+              Classic college bar, Wisconsin brats. $
+            </li>
+          </ul>
+        </div>
+        <div class="info-card">
+          <h4><span>👀</span> Don't Miss</h4>
+          <ul>
+            <li><strong>Memorial Union Terrace</strong> — Iconic lakeside spot</li>
+            <li><strong>Bascom Hill</strong> — Heart of campus</li>
+            <li><strong>Camp Randall</strong> — Jump Around!</li>
+            <li><strong>State Capitol</strong> — Beautiful rotunda</li>
+            <li><strong>Babcock Hall</strong> — Famous ice cream!</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Day 7: Home -->
+<section class="day-section" data-location="chicago">
+  <div class="day-hero" style="background-image: url('https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1920&q=80');">
+    <div class="day-hero-content">
+      <div class="day-badge">Day 7 • Wednesday, April 8</div>
+      <h2>Homeward Bound</h2>
+      <p>Madison → Chicago → Los Angeles</p>
+    </div>
+  </div>
+  <div class="day-content">
+    <div class="container">
+      <div class="drive-banner">
+        <div class="icon">🚗</div>
+        <div class="text">
+          <h4>Madison → Chicago O'Hare</h4>
+          <p>150 miles • ~2.5 hours via I-90</p>
+        </div>
+      </div>
+      
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-time">10:00 AM</div>
+          <div class="timeline-title">Sleep In & Pack</div>
+          <div class="timeline-desc">Leisurely morning, checkout from hotel</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">11:00 AM</div>
+          <div class="timeline-title">Drive to Chicago</div>
+          <div class="timeline-desc">Scenic drive through Wisconsin countryside</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">1:30 PM</div>
+          <div class="timeline-title">Return Rental Car</div>
+          <div class="timeline-desc">Drop off at O'Hare, grab lunch in terminal</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">6:00 PM</div>
+          <div class="timeline-title">Depart Chicago ✈️</div>
+          <div class="timeline-desc">United nonstop to LAX<br>Flight time: 4 hours 37 minutes</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-time">8:37 PM</div>
+          <div class="timeline-title">Arrive Los Angeles 🌴</div>
+          <div class="timeline-desc">Home sweet home! Trip complete.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Flights Section -->
+<section class="flights-section">
+  <div class="container">
+    <h2>✈️ Flight Options</h2>
+    
+    <div class="flight-card">
+      <h3>Outbound: Los Angeles → Indianapolis (April 2)</h3>
+      <div class="flight-row recommended">
+        <div class="flight-info">
+          <div class="airline-logo">AA</div>
+          <div>
+            <div class="flight-times">9:34 AM → 4:37 PM</div>
+            <div class="flight-meta">American Airlines • 4h 3m • <span class="nonstop-badge">Nonstop</span></div>
+          </div>
+        </div>
+        <div class="flight-price">$481<small>round trip</small></div>
+      </div>
+      <div class="flight-row">
+        <div class="flight-info">
+          <div class="airline-logo">DL</div>
+          <div>
+            <div class="flight-times">9:25 AM → 4:16 PM</div>
+            <div class="flight-meta">Delta • 3h 51m • <span class="nonstop-badge">Nonstop</span></div>
+          </div>
+        </div>
+        <div class="flight-price">$898<small>round trip</small></div>
+      </div>
+      <div class="flight-row">
+        <div class="flight-info">
+          <div class="airline-logo">UA</div>
+          <div>
+            <div class="flight-times">8:15 AM → 5:48 PM</div>
+            <div class="flight-meta">United • 6h 33m • <span class="stop-badge">1 stop ORD</span></div>
+          </div>
+        </div>
+        <div class="flight-price">$469<small>round trip</small></div>
+      </div>
+    </div>
+    
+    <div class="flight-card">
+      <h3>Return: Chicago O'Hare → Los Angeles (April 8)</h3>
+      <div class="flight-row recommended">
+        <div class="flight-info">
+          <div class="airline-logo">UA</div>
+          <div>
+            <div class="flight-times">6:00 PM → 8:37 PM</div>
+            <div class="flight-meta">United • 4h 37m • <span class="nonstop-badge">Nonstop</span></div>
+          </div>
+        </div>
+        <div class="flight-price">$257<small>one-way</small></div>
+      </div>
+      <div class="flight-row">
+        <div class="flight-info">
+          <div class="airline-logo">AA</div>
+          <div>
+            <div class="flight-times">4:30 PM → 7:08 PM</div>
+            <div class="flight-meta">American • 4h 38m • <span class="nonstop-badge">Nonstop</span></div>
+          </div>
+        </div>
+        <div class="flight-price">$317<small>one-way</small></div>
+      </div>
+      <div class="flight-row">
+        <div class="flight-info">
+          <div class="airline-logo">F9</div>
+          <div>
+            <div class="flight-times">7:45 PM → 10:30 PM</div>
+            <div class="flight-meta">Frontier • 4h 45m • <span class="nonstop-badge">Nonstop</span></div>
+          </div>
+        </div>
+        <div class="flight-price">$207<small>one-way</small></div>
+      </div>
+    </div>
+    
+    <div class="flight-totals">
+      <h4>Estimated Total for 3 Passengers:</h4>
+      <ul>
+        <li>
+          <span>⭐ Best Value: American (IND) + United (ORD)</span>
+          <span class="total-price">$2,214</span>
+        </li>
+        <li>
+          <span>Budget Option: American (IND) + Frontier (ORD)</span>
+          <span class="total-price">$2,064</span>
+        </li>
+        <li>
+          <span>Premium: Delta nonstop both ways</span>
+          <span class="total-price">$3,645</span>
+        </li>
+      </ul>
+    </div>
+    
+    <p style="text-align:center; margin-top:24px; color:var(--gray); font-size:14px;">
+      💡 Prices as of Feb 2026. <a href="https://www.google.com/travel/flights" target="_blank" style="color:var(--rust);">Search on Google Flights →</a>
+    </p>
+  </div>
+</section>
+
+<!-- Hotels Summary -->
+<section class="hotels-section">
+  <div class="container">
+    <h2>🏨 Hotels Summary</h2>
+    
+    <div class="hotel-grid">
+      <div class="hotel-card">
+        <div class="hotel-card-header">
+          <h4>Night 1: Indianapolis</h4>
+          <p>Thu Apr 2</p>
+        </div>
+        <div class="hotel-card-body">
+          <div class="hotel-option featured">
+            <h5><a href="https://www.ihg.com/intercontinental/hotels/us/en/indianapolis/indha/hoteldetail" target="_blank">InterContinental</a></h5>
+            <div class="price">$189/night</div>
+            <div class="desc">Luxury downtown, walk to restaurants</div>
+          </div>
+          <div class="hotel-option">
+            <h5><a href="https://www.hilton.com/en/hotels/indcugi-embassy-suites-indianapolis-downtown/" target="_blank">Embassy Suites</a></h5>
+            <div class="price">$179/night</div>
+            <div class="desc">Suites, free breakfast</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="hotel-card">
+        <div class="hotel-card-header" style="background: linear-gradient(135deg, #0c2340, #ae9142);">
+          <h4>Night 2: South Bend</h4>
+          <p>Fri Apr 3</p>
+        </div>
+        <div class="hotel-card-body">
+          <div class="hotel-option featured">
+            <h5><a href="https://morrisinn.nd.edu/" target="_blank">Morris Inn at Notre Dame</a></h5>
+            <div class="price">$219/night</div>
+            <div class="desc">ON campus, walking distance to everything</div>
+          </div>
+          <div class="hotel-option">
+            <h5><a href="https://www.hilton.com/en/hotels/sbndigi-hilton-garden-inn-south-bend/" target="_blank">Hilton Garden Inn</a></h5>
+            <div class="price">$149/night</div>
+            <div class="desc">Near campus, good value</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="hotel-card">
+        <div class="hotel-card-header" style="background: linear-gradient(135deg, #00274C, #FFCB05);">
+          <h4>Nights 3-4: Ann Arbor</h4>
+          <p>Sat-Sun Apr 4-5</p>
+        </div>
+        <div class="hotel-card-body">
+          <div class="hotel-option featured">
+            <h5><a href="https://www.graduatehotels.com/ann-arbor/" target="_blank">Graduate Ann Arbor</a></h5>
+            <div class="price">$199/night</div>
+            <div class="desc">Downtown, Michigan-themed, walkable</div>
+          </div>
+          <div class="hotel-option">
+            <h5><a href="https://www.thekelloggcenter.com/" target="_blank">Weber's Hotel</a></h5>
+            <div class="price">$159/night</div>
+            <div class="desc">Local favorite, great restaurant</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="hotel-card">
+        <div class="hotel-card-header" style="background: linear-gradient(135deg, #c5050c, #282728);">
+          <h4>Nights 5-6: Madison</h4>
+          <p>Mon-Tue Apr 6-7</p>
+        </div>
+        <div class="hotel-card-body">
+          <div class="hotel-option featured">
+            <h5><a href="https://www.graduatehotels.com/madison/" target="_blank">Graduate Madison</a></h5>
+            <div class="price">$219/night</div>
+            <div class="desc">State Street, walk to campus</div>
+          </div>
+          <div class="hotel-option">
+            <h5><a href="https://www.hyatt.com/en-US/hotel/wisconsin/hyatt-place-madison-downtown/msnzd" target="_blank">Hyatt Place Downtown</a></h5>
+            <div class="price">$179/night</div>
+            <div class="desc">Great value, central</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="flight-totals" style="margin-top:40px;">
+      <h4>Estimated Hotel Total (6 nights):</h4>
+      <ul>
+        <li>
+          <span>⭐ Recommended Mix</span>
+          <span class="total-price">~$1,200</span>
+        </li>
+        <li>
+          <span>Budget Option</span>
+          <span class="total-price">~$950</span>
+        </li>
+        <li>
+          <span>Splurge (Graduate everywhere)</span>
+          <span class="total-price">~$1,450</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+  <h2>📋 Ready to Book?</h2>
+  <p>Tour spots fill up fast — especially in spring!</p>
+  <div class="cta-buttons">
+    <a href="https://admissions.indiana.edu/visit/campus-visit.html" target="_blank" class="cta-btn">Indiana U</a>
+    <a href="https://admissions.nd.edu/visit/" target="_blank" class="cta-btn">Notre Dame</a>
+    <a href="https://admissions.umich.edu/visit" target="_blank" class="cta-btn">Michigan</a>
+    <a href="https://www.wisc.edu/visit/" target="_blank" class="cta-btn">Wisconsin</a>
+    <a href="https://www.google.com/travel/flights" target="_blank" class="cta-btn">Flights</a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <p>Made with 💛 for the Gibbons family • Midwest College Tour 2026</p>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// Initialize map
+const map = L.map('map', {
+  scrollWheelZoom: false,
+  dragging: !L.Browser.mobile
+}).setView([41.0, -86.5], 6);
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  attribution: '©OpenStreetMap, ©CartoDB',
+  maxZoom: 19
+}).addTo(map);
+
+// Locations
+const locations = {
+  indianapolis: { coords: [39.7684, -86.1581], name: "Indianapolis", color: "#1a365d" },
+  bloomington: { coords: [39.1653, -86.5264], name: "Indiana University", color: "#990000" },
+  notredame: { coords: [41.7052, -86.2353], name: "Notre Dame", color: "#0c2340" },
+  michigan: { coords: [42.2780, -83.7382], name: "University of Michigan", color: "#00274C" },
+  madison: { coords: [43.0766, -89.4125], name: "UW-Madison", color: "#c5050c" },
+  chicago: { coords: [41.9742, -87.9073], name: "Chicago O'Hare", color: "#1a365d" }
+};
+
+// Draw route
+const routeCoords = [
+  locations.indianapolis.coords,
+  locations.bloomington.coords,
+  locations.notredame.coords,
+  locations.michigan.coords,
+  locations.madison.coords,
+  locations.chicago.coords
+];
+
+L.polyline(routeCoords, {
+  color: '#d69e2e',
+  weight: 3,
+  opacity: 0.7,
+  dashArray: '10, 10'
+}).addTo(map);
+
+// Add markers
+Object.keys(locations).forEach(key => {
+  const loc = locations[key];
+  const icon = L.divIcon({
+    className: '',
+    html: `<div style="width:20px;height:20px;background:${loc.color};border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>`,
+    iconSize: [20, 20],
+    iconAnchor: [10, 10]
+  });
+  
+  L.marker(loc.coords, { icon })
+    .addTo(map)
+    .bindPopup(`<div class="map-popup"><h4>${loc.name}</h4></div>`);
+});
+
+// Scroll-based map updates
+const sections = document.querySelectorAll('.day-section');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const location = entry.target.dataset.location;
+      if (locations[location]) {
+        map.flyTo(locations[location].coords, 10, { duration: 1 });
+      }
+    }
+  });
+}, { threshold: 0.3 });
+
+sections.forEach(section => observer.observe(section));
+
+// Fit bounds on load
+map.fitBounds(routeCoords, { padding: [50, 50] });
+</script>
+
+</body>
+</html>
