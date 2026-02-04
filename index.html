@@ -220,6 +220,7 @@
     flex: 1;
     max-width: 55%;
     background: var(--card);
+    order: 1; /* Content on left for desktop */
   }
   
   .itinerary-map {
@@ -228,6 +229,7 @@
     top: 0;
     height: 100vh;
     background: var(--charcoal);
+    order: 2; /* Map on right for desktop */
   }
   
   #map {
@@ -680,18 +682,32 @@
      ======================================== */
   @media (max-width: 1024px) {
     .itinerary-wrapper {
-      flex-direction: column;
+      display: block;
+      position: relative;
     }
     
     .itinerary-content {
       max-width: 100%;
+      position: relative;
+      z-index: 1;
+      order: unset;
     }
     
+    /* Section intro scrolls normally */
+    .section-intro {
+      position: relative;
+      z-index: 2;
+      background: var(--bg);
+    }
+    
+    /* Map sticks to top 40% of viewport */
     .itinerary-map {
       width: 100%;
-      height: 400px;
-      position: relative;
-      order: -1;
+      height: 40vh;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      order: unset;
     }
     
     .parallax-section {
@@ -797,6 +813,11 @@
      ITINERARY - 50/50 Layout
      ======================================== -->
 <div class="itinerary-wrapper">
+  <!-- Map - sticky on mobile -->
+  <div class="itinerary-map">
+    <div id="map"></div>
+  </div>
+  
   <div class="itinerary-content">
     
     <div class="section-intro">
@@ -1245,11 +1266,6 @@
       </div>
     </div>
     
-  </div>
-  
-  <!-- Map Sidebar -->
-  <div class="itinerary-map">
-    <div id="map"></div>
   </div>
 </div>
 
