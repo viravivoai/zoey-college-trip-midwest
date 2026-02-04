@@ -369,36 +369,32 @@
   }
   
   /* Timeline within stops */
+  /* Timeline - Simple bullet style (Kyoto-inspired) */
   .stop-timeline {
     margin: 24px 0;
-    padding-left: 20px;
-    border-left: 2px solid var(--sand);
+    padding-left: 0;
   }
   
   .timeline-event {
     position: relative;
-    padding: 12px 0 12px 20px;
+    padding: 10px 0 10px 24px;
   }
   
   .timeline-event::before {
-    content: '';
+    content: '•';
     position: absolute;
-    left: -7px;
-    top: 18px;
-    width: 12px;
-    height: 12px;
-    background: var(--olive);
-    border-radius: 50%;
-    border: 2px solid var(--card);
+    left: 4px;
+    top: 10px;
+    font-size: 18px;
+    color: var(--rust);
+    line-height: 1;
   }
   
   .timeline-event .time {
     font-size: 12px;
     font-weight: 600;
     color: var(--rust);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
   }
   
   .timeline-event .title {
