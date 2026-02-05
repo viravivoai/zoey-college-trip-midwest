@@ -1400,9 +1400,9 @@ stops.forEach(stop => {
   markers[stop.num] = { marker, stop };
 });
 
-// Decode polyline encoded route from OSRM
+// Decode polyline encoded route from OSRM (uses 1e5 precision)
 function decodePolyline(encoded) {
-  let inv = 1.0 / 1e6;
+  let inv = 1.0 / 1e5; // OSRM uses 5 decimal places
   let decoded = [];
   let previous = [0, 0];
   let i = 0;
@@ -1442,6 +1442,9 @@ async function fetchDrivingRoute() {
         weight: 3,
         opacity: 0.7
       }).addTo(map);
+      
+      // Fit bounds to route after drawing
+      map.fitBounds(L.latLngBounds(routeCoords), { padding: [50, 50] });
     }
   } catch (error) {
     console.warn('OSRM routing failed, using straight line fallback');
@@ -1452,14 +1455,14 @@ async function fetchDrivingRoute() {
       opacity: 0.6,
       dashArray: '8, 8'
     }).addTo(map);
+    
+    // Fit bounds to fallback route
+    map.fitBounds(L.latLngBounds(routeCoords), { padding: [50, 50] });
   }
 }
 
 // Draw route line using actual highway routing
 fetchDrivingRoute();
-
-// Fit bounds
-map.fitBounds(L.latLngBounds(routeCoords), { padding: [50, 50] });
 
 // Scroll-based highlighting
 const stopItems = document.querySelectorAll('.stop-item');
